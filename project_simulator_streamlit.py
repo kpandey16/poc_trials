@@ -33,6 +33,7 @@ DEFAULT_STAGES = {
 def create_stage_controls():
     """Create interactive controls for stage parameters"""
     modified_stages = {}
+    total_baseline = 0
     
     for stage_num in DEFAULT_STAGES:
         stage = DEFAULT_STAGES[stage_num]
@@ -45,7 +46,8 @@ def create_stage_controls():
                 value=stage['baseline'],
                 key=f"stage_{stage_num}_baseline"
             )
-            
+            total_baseline += new_baseline
+
             # Risk controls
             modified_risks = []
             for risk_idx, risk in enumerate(stage['risks']):
@@ -92,7 +94,7 @@ def create_stage_controls():
                 'risks': modified_risks
             }
     
-    return modified_stages
+    return modified_stages, total_baseline
 
 def simulate_project(stages):
     total_delay = 0
@@ -138,16 +140,24 @@ def main():
     # Sidebar controls
     with st.sidebar:
         st.header("Simulation Controls")
+        total_baseline = st.empty()
+
         num_simulations = st.number_input(
             "Number of simulations",
             min_value=1000,
             max_value=100000,
             value=10000
         )
-    
-    # Stage configuration
+
+
     st.header("Project Stage Configuration")
-    modified_stages = create_stage_controls()
+    modified_stages, calculated_baseline = create_stage_controls()
+
+    with st.container():
+        total_baseline.metric("Total Baseline Duration", f"{calculated_baseline} months")
+
+    # Stage configuration
+    
     
     # Run simulation
     if st.button("🚀 Run Simulation", type="primary"):
